@@ -168,104 +168,105 @@ elif page == "Job Applications":
     st.subheader("Your Applications")
     st.subheader("Upcoming Deadlines")
 
-all_applications = read_data("applications")
+    all_applications = read_data("applications")
 
-if not all_applications.empty:
-    all_applications["deadline"] = pd.to_datetime(
-        all_applications["deadline"],
-        errors="coerce"
-    )
-
-    today = pd.Timestamp(date.today())
-
-    upcoming = all_applications[
-        (all_applications["deadline"] >= today) &
-        (all_applications["deadline"] <= today + pd.Timedelta(days=7))
-    ]
-
-    if not upcoming.empty:
-        st.warning("You have application deadlines within the next 7 days.")
-        st.dataframe(
-            upcoming[["company", "role", "deadline", "status"]],
-            use_container_width=True
+    if not all_applications.empty:
+        all_applications["deadline"] = pd.to_datetime(
+            all_applications["deadline"],
+            errors="coerce"
         )
-    else:
-        st.success("No upcoming deadlines within 7 days.")
-else:
-    st.info("Add applications with deadlines to see alerts.")
 
-applications = read_data("applications")
+        today = pd.Timestamp(date.today())
 
-if not applications.empty:
-    search = st.text_input("Search by company name")
+        upcoming = all_applications[
+            (all_applications["deadline"] >= today) &
+            (all_applications["deadline"] <= today + pd.Timedelta(days=7))
+        ]
 
-    status_filter = st.selectbox(
-        "Filter by application status",
-        ["All", "Applied", "Assessment", "Interview", "Selected", "Rejected"]
-    )
-
-    if search:
-        applications = applications[
-            applications["company"].str.contains(
-                search, case=False, na=False
+        if not upcoming.empty:
+            st.warning("You have application deadlines within the next 7 days.")
+            st.dataframe(
+                upcoming[["company", "role", "deadline", "status"]],
+                use_container_width=True
             )
-        ]
+        else:
+            st.success("No upcoming deadlines within 7 days.")
+    else:
+        st.info("Add applications with deadlines to see alerts.")
 
-    if status_filter != "All":
-        applications = applications[
-            applications["status"] == status_filter
-        ]
+    applications = read_data("applications")
 
     if not applications.empty:
-        st.dataframe(applications, use_container_width=True)
+        search = st.text_input("Search by company name")
 
-        selected_id = st.selectbox(
-            "Select application ID to update or delete",
-            applications["id"].tolist()
+        status_filter = st.selectbox(
+            "Filter by application status",
+            ["All", "Applied", "Assessment", "Interview", "Selected", "Rejected"]
         )
 
-        selected_status = st.selectbox(
-            "Update status",
-            ["Applied", "Assessment", "Interview", "Selected", "Rejected"]
-        )
+        if search:
+            applications = applications[
+                applications["company"].str.contains(
+                    search, case=False, na=False
+                )
+            ]
 
-        col1, col2 = st.columns(2)
+        if status_filter != "All":
+            applications = applications[
+                applications["status"] == status_filter
+            ]
 
-        with col1:
-            if st.button("Update Status"):
-                with connect() as conn:
-                    conn.execute(
-                        "UPDATE applications SET status=? WHERE id=?",
-                        (selected_status, selected_id)
-                    )
-                st.success("Status updated.")
-                st.rerun()
+        if not applications.empty:
+            st.dataframe(applications, use_container_width=True)
 
-        with col2:
-            if st.button("Delete Application"):
-                with connect() as conn:
-                    conn.execute(
-                        "DELETE FROM applications WHERE id=?",
-                        (selected_id,)
-                    )
-                st.success("Application deleted.")
-                st.rerun()
+            selected_id = st.selectbox(
+                "Select application ID to update or delete",
+                applications["id"].tolist()
+            )
 
-        csv = applications.to_csv(index=False).encode("utf-8")
+            selected_status = st.selectbox(
+                "Update status",
+                ["Applied", "Assessment", "Interview", "Selected", "Rejected"]
+            )
 
-        st.download_button(
-            "Download Applications as CSV",
-            data=csv,
-            file_name="job_applications.csv",
-            mime="text/csv"
-        )
-    else:
-        st.info("Your application list is empty.")
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("Update Status"):
+                    with connect() as conn:
+                        conn.execute(
+                            "UPDATE applications SET status=? WHERE id=?",
+                            (selected_status, selected_id)
+                        )
+                    st.success("Status updated.")
+                    st.rerun()
+
+            with col2:
+                if st.button("Delete Application"):
+                    with connect() as conn:
+                        conn.execute(
+                            "DELETE FROM applications WHERE id=?",
+                            (selected_id,)
+                        )
+                    st.success("Application deleted.")
+                    st.rerun()
+
+            csv = applications.to_csv(index=False).encode("utf-8")
+
+            st.download_button(
+                "Download Applications as CSV",
+                data=csv,
+                file_name="job_applications.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("Your application list is empty.")
 
 
 # ---------- PREPARATION TASKS ----------
 
 elif page == "Preparation Tasks":
+    st.success("Preparation Tasks page is loading!")
 
     st.header("Manage Preparation Tasks")
 
